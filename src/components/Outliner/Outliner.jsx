@@ -111,6 +111,17 @@ class Outliner extends React.Component {
         if (!e.altKey && !e.ctrlKey && !e.shiftKey) {
           changed=this.topicTree.deleteTopic(this.state.activeNode);
         }
+        break;
+      case 'ArrowUp':
+        if (e.ctrlKey && !e.altKey && !e.shiftKey) {
+          changed=this.topicTree.moveUp(this.state.activeNode);
+        }
+        break;
+      case 'ArrowDown':
+        if (e.ctrlKey && !e.altKey && !e.shiftKey) {
+          changed=this.topicTree.moveDown(this.state.activeNode);
+        }
+        break;
     }
     if (changed) {
       this.setState({topics:this.topicTree.topics},this.applyChange.bind(this));

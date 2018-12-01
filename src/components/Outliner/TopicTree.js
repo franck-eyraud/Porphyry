@@ -1,3 +1,7 @@
+Array.prototype.move = function(from, to) {
+   this.splice(to, 0, this.splice(from, 1)[0]);
+};
+
 class TopicTree {
   constructor(topics,rootName) {
     this.topics=topics;
@@ -163,6 +167,46 @@ class TopicTree {
     }
     return false;
   }
+
+    moveUp(id) {
+      if (!id) return;
+      var siblings=this.getSiblings(id);
+      let pos=siblings.indexOf(id);
+      if (pos>0) {
+        //change position inside siblings
+        siblings.move(pos,pos-1);
+        this.setOrder(siblings);
+        return true;
+      } else {
+        //attach to parent's sibling
+        let newParent=this.getPreviousSibling(this.getParent(id));
+        return this.setParent(id,newParent);
+      }
+      return false;
+    }
+
+    moveDown(id) {
+      if (!id) return;
+      var siblings=this.getSiblings(id);
+      if (!siblings) {
+        console.log("can't find siblings of",id);
+        return;
+      }
+      console.log(siblings);
+      let pos=siblings.indexOf(id);
+      if (pos<siblings.length-1) {
+        //change position inside siblings
+        siblings.move(pos,pos+1);
+        this.setOrder(siblings);
+        return true;
+      } else {
+        //attach to parent's sibling
+        let newParent=this.getNextSibling(this.getParent(id));
+        return this.setParent(id,newParent);
+      }
+      return false;
+    }
+
 }
 
 module.exports=TopicTree;
