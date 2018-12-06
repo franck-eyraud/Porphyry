@@ -95,7 +95,7 @@ class Outliner extends React.Component {
     if (e.cancelBubble) return;
     switch (e.key) {
       case "Enter":
-        let topic=this.topicTree.newSibling(this.state.activeNode);
+        this.topicTree.newSibling(this.state.activeNode);
         changed=true;
         break;
       case "Tab":
@@ -122,6 +122,8 @@ class Outliner extends React.Component {
           changed=this.topicTree.moveDown(this.state.activeNode);
         }
         break;
+      default:
+        changed=false;
     }
     if (changed) {
       this.setState({topics:this.topicTree.topics},this.applyChange.bind(this));
@@ -181,7 +183,7 @@ class Outliner extends React.Component {
     return db.get({ _id: this.props.match.params.id })
       .then(x => {
         this.setState({ topics: x.topics, title: x.viewpoint_name });
-        this.topicTree=new TopicTree(x. topics);
+        this.topicTree=new TopicTree(x.topics);
       });
   }
 

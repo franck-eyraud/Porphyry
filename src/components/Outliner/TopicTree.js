@@ -1,3 +1,4 @@
+/*eslint no-extend-native: ["warn", { "exceptions": ["Array"] }]*/
 Array.prototype.move = function(from, to) {
    this.splice(to, 0, this.splice(from, 1)[0]);
 };
@@ -125,7 +126,6 @@ class TopicTree {
 
   deleteTopic(id) {
     if (!id || this.topics[id]) {
-      let topic=this.getTopic(id);
       let children=this.getChildren(id);
       let parent=this.getParent(id);
       children.forEach(id => {
@@ -145,7 +145,7 @@ class TopicTree {
       var newSiblings=this.getChildren(newParent);
       if (this.setParent(id,newParent)) {
         let pos=newSiblings.indexOf(parent);
-        if (pos != -1) {
+        if (pos !== -1) {
           newSiblings.splice(pos+1,0,id);
           return this.setOrder(newSiblings);
         }
@@ -182,7 +182,6 @@ class TopicTree {
         let newParent=this.getPreviousSibling(this.getParent(id));
         return this.setParent(id,newParent);
       }
-      return false;
     }
 
     moveDown(id) {
@@ -204,7 +203,6 @@ class TopicTree {
         let newParent=this.getNextSibling(this.getParent(id));
         return this.setParent(id,newParent);
       }
-      return false;
     }
 
 }
