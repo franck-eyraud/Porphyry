@@ -42,7 +42,7 @@ class Outliner extends React.Component {
                   {this.state.title ? '' : this._getTitle()}
                   <ul className="Outliner">
                     <Node topics={this.state.topics} name={this.state.title} activeNode={this.state.activeNode}
-                      change={this.editTopic.bind(this)} activate={this.activeNode.bind(this)}/>
+                      change={this.editTopic.bind(this)} activate={this.activeNode.bind(this)} id="root"/>
                   </ul>
                 </div>
               </div>
@@ -89,10 +89,6 @@ class Outliner extends React.Component {
 
   handleKeyAction(e) {
     var changed=false;
-    if (this.state.activeNode &&!this.state.topics[this.state.activeNode]) {
-      //nothing to work on
-      return;
-    }
     switch (e.key) {
       case "Enter":
         var topic=this.topicTree.newSibling(this.state.activeNode);
@@ -108,21 +104,30 @@ class Outliner extends React.Component {
           }
         }
         break;
-      case 'Delete':
-      case 'Backspace':
-        if (!e.altKey && !e.ctrlKey && !e.shiftKey) {
-          if (e.target.tagName==="BODY" || e.target.value==='' )
-            changed=this.topicTree.deleteTopic(this.state.activeNode);
-        }
-        break;
       case 'ArrowUp':
+        if (!e.altKey && !e.ctrlKey && !e.shiftKey) {
+          this.activeNode(this.topicTree.getPreviousTopic(this.state.activeNode));
+        }
         if (e.ctrlKey && !e.altKey && !e.shiftKey) {
           changed=this.topicTree.moveUp(this.state.activeNode);
         }
         break;
       case 'ArrowDown':
+        if (!e.altKey && !e.ctrlKey && !e.shiftKey) {
+          this.activeNode(this.topicTree.getNextTopic(this.state.activeNode));
+        }
         if (e.ctrlKey && !e.altKey && !e.shiftKey) {
           changed=this.topicTree.moveDown(this.state.activeNode);
+        }
+        break;
+      case 'Delete':
+      case 'Backspace':
+        if (!e.altKey && !e.ctrlKey && !e.shiftKey) {
+          if (e.target.tagName==="BODY" || e.target.value==='' ) {
+            let previousTopic=this.topicTree.getPreviousTopic(this.state.activeNode);
+            changed=this.topicTree.deleteTopic(this.state.activeNode);
+            if (changed) this.activeNode(this.topicTree.getNextTopic(previousTopic));
+          }
         }
         break;
       default:
@@ -143,7 +148,7 @@ class Outliner extends React.Component {
       let topics=previousState.topics;
       let topic;
       if (!id) {
-        if (change.name && change.name!=previousState.title) {
+        if (change.name && change.name!==previousState.title) {
           return {title:change.name}
         }
       } else if (topics[id]) {
@@ -228,7 +233,6 @@ class Node extends React.Component {
       switchEdit(e);
     }
     let handleInput = (e) => {
-      console.log("input",e.key);
       switch(e.key) {
         case "Enter":
           commitEdit(e);
@@ -256,7 +260,7 @@ class Node extends React.Component {
       for (var topID in this.props.topics) {
         let topic=this.props.topics[topID];
         if ((this.props.id && topic.broader.indexOf(this.props.id)!==-1)
-          || (!this.props.id && topic.broader.length===0)) {
+          || (this.props.id==="root" && topic.broader.length===0)) {
             children.push(
               <Node key={topID} id={topID} name={topic.name} topics={this.props.topics} activeNode={this.props.activeNode} parent={this.props.id}
                 activate={this.props.activate} change={this.props.change}/>
@@ -278,7 +282,7 @@ class Node extends React.Component {
     }
     return (
       <li className={classes.join(" ")}>
-        {caret}<span className="wrap" onClick={activeMe}>{thisNode}</span>
+        {caret}<span className="wrap" onClick={activeMe}>{thisNode}<span className="id">{this.props.id}</span></span>
         <ul>{children}</ul>
       </li>);
   };
