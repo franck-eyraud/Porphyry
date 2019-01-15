@@ -5,6 +5,8 @@ import conf from '../../config/config.json';
 import Header from '../Header/Header.jsx';
 import Authenticated from '../Authenticated/Authenticated.jsx';
 import TopicTree from './TopicTree.js';
+import { DragDropContextProvider, DragSource } from 'react-dnd';
+import HTML5Backend from 'react-dnd-html5-backend';
 
 import '../../styles/App.css';
 
@@ -41,8 +43,10 @@ class Outliner extends React.Component {
                 <div className="p-3">
                   {this.state.title ? '' : this._getTitle()}
                   <ul className="Outliner">
-                    <Node topics={this.state.topics} name={this.state.title} activeNode={this.state.activeNode}
+                    <DragDropContextProvider backend={HTML5Backend}>
+                    <DragNode topics={this.state.topics} name={this.state.title} activeNode={this.state.activeNode}
                       change={this.editTopic.bind(this)} activate={this.activeNode.bind(this)} id="root"/>
+                    </DragDropContextProvider>
                   </ul>
                 </div>
               </div>
@@ -169,8 +173,9 @@ class Outliner extends React.Component {
 
   componentDidMount() {
     this._fetchData();
-    this._timer = setInterval(this._fetchData.bind(this),1000);
-    document.addEventListener("keypress", this.handleKeyAction.bind(this));
+    this._timer = setInterval(this._fetchData.bind(this),5000);
+    //document.addEventListener("keypress", this.handleKeyAction.bind(this));
+    document.addEventListener("keydown", this.handleKeyAction.bind(this));
   }
 
   componentWillUnmount() {
@@ -188,9 +193,9 @@ class Outliner extends React.Component {
         .then(db.post)
         .catch(_ => {
           _error(_);
-          this._fetchData();
         }).finally(() => {
           this.changing=false;
+          this._fetchData();
         });
     }
     return this.changing;
@@ -209,6 +214,30 @@ class Outliner extends React.Component {
   }
 
 }
+
+const ItemTypes = {
+  NODE: 'node'
+}
+
+const nodeSource = {
+  beginDrag(props) {
+    console.log("begin drag");
+    return {};
+  },
+  canDrag(props) {
+    return true;
+  }
+};
+
+
+function collect(connect, monitor) {
+  console.log("collect");
+  return {
+    connectDragSource: connect.dragSource(),
+    isDragging: monitor.isDragging()
+  }
+}
+
 
 class Node extends React.Component {
 
@@ -229,7 +258,9 @@ class Node extends React.Component {
     let change=this.props.change;
     let commitEdit = (e) => {
       let newName=e.target.value;
-      change(this.props.id,{name:newName});
+      if (newName!==this.props.name) {
+        change(this.props.id,{name:newName});
+      }
       switchEdit(e);
     }
     let handleInput = (e) => {
@@ -239,7 +270,7 @@ class Node extends React.Component {
           e.stopPropagation();
           break;
         case "Escape":
-          switchEdit(e);
+          e.target.value=this.props.name;
           e.stopPropagation();
           break;
         default:
@@ -262,7 +293,7 @@ class Node extends React.Component {
         if ((this.props.id && topic.broader.indexOf(this.props.id)!==-1)
           || (this.props.id==="root" && topic.broader.length===0)) {
             children.push(
-              <Node key={topID} id={topID} name={topic.name} topics={this.props.topics} activeNode={this.props.activeNode} parent={this.props.id}
+              <DragNode key={topID} id={topID} name={topic.name} topics={this.props.topics} activeNode={this.props.activeNode} parent={this.props.id}
                 activate={this.props.activate} change={this.props.change}/>
             );
         }
@@ -280,6 +311,7 @@ class Node extends React.Component {
     } else {
       caret=null;
     }
+    const { isDragging, connectDragSource } = this.props;
     return (
       <li className={classes.join(" ")}>
         {caret}<span className="wrap" onClick={activeMe}>{thisNode}<span className="id">{this.props.id}</span></span>
@@ -288,5 +320,6 @@ class Node extends React.Component {
   };
 
 }
+const DragNode=DragSource(ItemTypes.NODE, nodeSource, collect)(Node);
 
 export default Outliner;
