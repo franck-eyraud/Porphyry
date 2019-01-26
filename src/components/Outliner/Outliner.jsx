@@ -27,6 +27,7 @@ class Outliner extends React.Component {
   render() {
     let status = this._getStatus();
     return (
+      <DragDropContextProvider backend={HTML5Backend}>
       <div className="App container-fluid">
         <Header />
         <div className="Status row h5">
@@ -43,10 +44,8 @@ class Outliner extends React.Component {
                 <div className="p-3">
                   {this.state.title ? '' : this._getTitle()}
                   <ul className="Outliner">
-                    <DragDropContextProvider backend={HTML5Backend}>
-                    <DragNode topics={this.state.topics} name={this.state.title} activeNode={this.state.activeNode}
+                    <Node topics={this.state.topics} name={this.state.title} activeNode={this.state.activeNode}
                       change={this.editTopic.bind(this)} activate={this.activeNode.bind(this)} id="root"/>
-                    </DragDropContextProvider>
                   </ul>
                 </div>
               </div>
@@ -54,6 +53,7 @@ class Outliner extends React.Component {
           </div>
         </div>
       </div>
+      </DragDropContextProvider>
     );
   }
 
@@ -225,6 +225,7 @@ const nodeSource = {
     return {};
   },
   canDrag(props) {
+    console.log("can drag");
     return true;
   }
 };
@@ -312,6 +313,7 @@ class Node extends React.Component {
       caret=null;
     }
     const { isDragging, connectDragSource } = this.props;
+    console.log("isDragging:"+isDragging);
     return (
       <li className={classes.join(" ")}>
         {caret}<span className="wrap" onClick={activeMe}>{thisNode}<span className="id">{this.props.id}</span></span>
